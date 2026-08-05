@@ -4,6 +4,8 @@ import "./styles.css";
 import "../styles/marketing.css";
 import "../styles/public-pages.css";
 import "../styles/auth.css";
+import "../styles/client.css";
+import "../styles/client-pages.css";
 
 export const metadata: Metadata = {
   title: {
