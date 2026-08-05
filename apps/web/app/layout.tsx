@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@levelup/ui/styles.css";
 import "./styles.css";
 
 export const metadata: Metadata = {
@@ -6,9 +7,11 @@ export const metadata: Metadata = {
   description: "Biến mục tiêu IELTS thành nhiệm vụ mỗi ngày.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" data-theme="light">
       <body>{children}</body>
     </html>
   );

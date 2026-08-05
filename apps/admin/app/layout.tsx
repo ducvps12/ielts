@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@levelup/ui/styles.css";
 import "./styles.css";
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" data-theme="dark">
       <body>{children}</body>
     </html>
   );

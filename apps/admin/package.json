@@ -13,6 +13,7 @@
     "test:e2e": "echo 'Admin E2E pending'"
   },
   "dependencies": {
+    "@levelup/ui": "workspace:*",
     "next": "15.5.2",
     "react": "19.1.1",
     "react-dom": "19.1.1"
