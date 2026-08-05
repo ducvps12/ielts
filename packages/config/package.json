@@ -1,6 +1,6 @@
 {
   "name": "@levelup/config",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -13,11 +13,11 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:integration": "vitest run --passWithNoTests",
-    "test:e2e": "echo 'No E2E tests for config package'"
+    "test:e2e": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "dotenv": "17.2.2",
