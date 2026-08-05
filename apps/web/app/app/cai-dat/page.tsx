@@ -1,26 +1,26 @@
-import { Bell, Settings, ShieldCheck } from "@levelup/ui/icons";
+import type { Metadata } from "next";
 
-import { ClientPlaceholderPage } from "../../../components/client/client-placeholder-page";
+import { LanguageSettingsPanel } from "../../../components/client/language-settings-panel";
+
+export const metadata: Metadata = {
+  title: "Cài đặt",
+  description:
+    "Quản lý ngôn ngữ giao diện, ngôn ngữ đang học và các tùy chọn khu vực.",
+};
 
 export default function SettingsPage() {
   return (
-    <ClientPlaceholderPage
-      eyebrow="PREFERENCES"
-      title="Cài đặt"
-      description="Quản lý tài khoản, timezone, khả năng truy cập, thông báo và kết nối bên ngoài."
-      icon={<Settings size={24} />}
-      cards={[
-        {
-          title: "Thông báo và quiet hours",
-          description: "Chọn kênh, thời gian nhắc và loại sự kiện muốn nhận.",
-          icon: <Bell size={24} />,
-        },
-        {
-          title: "Bảo mật và dữ liệu",
-          description: "Phiên đăng nhập, yêu cầu xuất dữ liệu và quy trình xóa tài khoản.",
-          icon: <ShieldCheck size={24} />,
-        },
-      ]}
-    />
+    <div className="client-settings-page">
+      <header className="client-settings-page__header">
+        <span>PREFERENCES</span>
+        <h1>Cài đặt cá nhân</h1>
+        <p>
+          Một người có thể dùng giao diện tiếng Việt, học tiếng Trung và nhận giải
+          thích bằng tiếng Anh. Những lựa chọn này không được gộp thành một trường.
+        </p>
+      </header>
+
+      <LanguageSettingsPanel />
+    </div>
   );
 }
