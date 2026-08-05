@@ -172,27 +172,87 @@ enum WebhookProcessingStatus {
 }
 
 model User {
-  id                String              @id @default(cuid())
-  email             String              @unique
-  displayName       String
-  status            UserStatus          @default(PENDING)
-  locale            String              @default("vi-VN")
-  timezone          String              @default("Asia/Ho_Chi_Minh")
-  goals             Goal[]
-  languageProfiles  LanguageProfile[]
-  campaigns         Campaign[]
-  questCompletions  QuestCompletion[]
-  learningSources   LearningSource[]
-  videoLessons      VideoLesson[]
-  checkoutSessions  CheckoutSession[]
-  subscriptions     Subscription[]
-  entitlementGrants EntitlementGrant[]
-  wallet            Wallet?
-  auditLogs         AuditLog[]          @relation("AuditActor")
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  emailVerifiedAt         DateTime?
+  displayName             String
+  status                  UserStatus               @default(PENDING)
+  locale                  String                   @default("vi-VN")
+  timezone                String                   @default("Asia/Ho_Chi_Minh")
+  credential              Credential?
+  sessions                Session[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  goals                   Goal[]
+  languageProfiles        LanguageProfile[]
+  campaigns               Campaign[]
+  questCompletions        QuestCompletion[]
+  learningSources         LearningSource[]
+  videoLessons            VideoLesson[]
+  checkoutSessions        CheckoutSession[]
+  subscriptions           Subscription[]
+  entitlementGrants       EntitlementGrant[]
+  wallet                  Wallet?
+  auditLogs               AuditLog[]               @relation("AuditActor")
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
 
   @@index([status, createdAt])
+  @@index([emailVerifiedAt, status])
+}
+
+model Credential {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  passwordHash      String
+  passwordUpdatedAt DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  userId        String
+  tokenHash     String   @unique
+  csrfTokenHash String
+  userAgentHash String?
+  ipHash        String?
+  expiresAt     DateTime
+  lastSeenAt    DateTime @default(now())
+  revokedAt     DateTime?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, consumedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, consumedAt, expiresAt])
+  @@index([expiresAt])
 }
 
 model GoalTemplate {
@@ -238,17 +298,17 @@ model Goal {
 }
 
 model LanguageProfile {
-  id                    String   @id @default(cuid())
-  userId                String
-  uiLocale              String   @default("vi")
-  learningLanguage      String
-  explanationLanguage   String
-  proficiencyFramework  String
-  proficiencyLevel      String
-  preferences           Json?
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Restrict)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  userId               String
+  uiLocale             String   @default("vi")
+  learningLanguage     String
+  explanationLanguage  String
+  proficiencyFramework String
+  proficiencyLevel     String
+  preferences          Json?
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@unique([userId, learningLanguage])
   @@index([learningLanguage, proficiencyFramework])
@@ -351,26 +411,26 @@ model LearningSource {
 }
 
 model VideoLesson {
-  id                   String             @id @default(cuid())
-  userId               String
-  sourceId             String
-  idempotencyKey       String             @unique
-  title                String
-  status               VideoLessonStatus  @default(DRAFT)
-  learningLanguage     String
-  explanationLanguage  String
-  proficiencyLevel     String
-  modelProvider        String?
-  modelVersion         String?
-  pipelineVersion      String
-  failureCode          String?
-  reviewedAt           DateTime?
-  user                 User               @relation(fields: [userId], references: [id], onDelete: Restrict)
-  source               LearningSource     @relation(fields: [sourceId], references: [id], onDelete: Restrict)
-  transcriptSegments   TranscriptSegment[]
-  vocabularyItems      VocabularyItem[]
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
+  id                  String              @id @default(cuid())
+  userId              String
+  sourceId            String
+  idempotencyKey      String              @unique
+  title               String
+  status              VideoLessonStatus   @default(DRAFT)
+  learningLanguage    String
+  explanationLanguage String
+  proficiencyLevel    String
+  modelProvider       String?
+  modelVersion        String?
+  pipelineVersion     String
+  failureCode         String?
+  reviewedAt          DateTime?
+  user                User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  source              LearningSource      @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  transcriptSegments  TranscriptSegment[]
+  vocabularyItems     VocabularyItem[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
 
   @@index([userId, status, createdAt])
   @@index([sourceId, status])
@@ -379,13 +439,13 @@ model VideoLesson {
 
 model TranscriptSegment {
   id        String      @id @default(cuid())
-  lessonId String
-  sequence Int
-  startMs  Int
-  endMs    Int
-  language String
-  text     String
-  lesson   VideoLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId  String
+  sequence  Int
+  startMs   Int
+  endMs     Int
+  language  String
+  text      String
+  lesson    VideoLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   createdAt DateTime    @default(now())
 
   @@unique([lessonId, sequence])
@@ -452,39 +512,39 @@ model Product {
 }
 
 model Plan {
-  id             String          @id @default(cuid())
-  productId      String
-  key            String
-  name           String
-  description    String
-  status         ProductStatus   @default(DRAFT)
+  id              String          @id @default(cuid())
+  productId       String
+  key             String
+  name            String
+  description     String
+  status          ProductStatus   @default(DRAFT)
   billingInterval BillingInterval
-  intervalCount  Int             @default(1)
-  entitlementKey String
-  limits         Json?
-  product        Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
-  prices         Price[]
-  subscriptions  Subscription[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  intervalCount   Int             @default(1)
+  entitlementKey  String
+  limits          Json?
+  product         Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  prices          Price[]
+  subscriptions   Subscription[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   @@unique([productId, key])
   @@index([status, createdAt])
 }
 
 model Price {
-  id              String           @id @default(cuid())
-  planId          String
-  currency        String
-  amountMinor     Int
-  active          Boolean          @default(false)
-  provider        PaymentProvider?
-  providerPriceId String?
-  countryCode     String?
-  plan            Plan             @relation(fields: [planId], references: [id], onDelete: Restrict)
+  id               String           @id @default(cuid())
+  planId           String
+  currency         String
+  amountMinor      Int
+  active           Boolean          @default(false)
+  provider         PaymentProvider?
+  providerPriceId  String?
+  countryCode      String?
+  plan             Plan             @relation(fields: [planId], references: [id], onDelete: Restrict)
   checkoutSessions CheckoutSession[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@index([planId, active])
   @@index([provider, providerPriceId])
@@ -492,22 +552,22 @@ model Price {
 }
 
 model CheckoutSession {
-  id                String          @id @default(cuid())
+  id                String           @id @default(cuid())
   userId            String
   priceId           String
   provider          PaymentProvider
-  status            CheckoutStatus  @default(CREATED)
-  idempotencyKey    String          @unique
-  providerReference String?         @unique
+  status            CheckoutStatus   @default(CREATED)
+  idempotencyKey    String           @unique
+  providerReference String?          @unique
   successUrl        String
   cancelUrl         String
   expiresAt         DateTime?
   metadata          Json?
-  user              User            @relation(fields: [userId], references: [id], onDelete: Restrict)
-  price             Price           @relation(fields: [priceId], references: [id], onDelete: Restrict)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  price             Price            @relation(fields: [priceId], references: [id], onDelete: Restrict)
   paymentAttempts   PaymentAttempt[]
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@index([userId, status, createdAt])
   @@index([provider, status, createdAt])
@@ -532,22 +592,22 @@ model PaymentAttempt {
 }
 
 model Subscription {
-  id                  String             @id @default(cuid())
-  userId              String
-  planId              String
-  provider            PaymentProvider
-  status              SubscriptionStatus @default(INCOMPLETE)
-  providerReference   String             @unique
-  currentPeriodStart  DateTime?
-  currentPeriodEnd    DateTime?
-  cancelAtPeriodEnd   Boolean            @default(false)
-  cancelledAt         DateTime?
-  metadata            Json?
-  user                User               @relation(fields: [userId], references: [id], onDelete: Restrict)
-  plan                Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
-  entitlementGrants   EntitlementGrant[]
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  id                 String             @id @default(cuid())
+  userId             String
+  planId             String
+  provider           PaymentProvider
+  status             SubscriptionStatus @default(INCOMPLETE)
+  providerReference  String             @unique
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean            @default(false)
+  cancelledAt        DateTime?
+  metadata           Json?
+  user               User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan               Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  entitlementGrants  EntitlementGrant[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   @@index([userId, status])
   @@index([provider, status])
@@ -572,18 +632,18 @@ model EntitlementGrant {
 }
 
 model ProviderWebhookEvent {
-  id                String                  @id @default(cuid())
-  provider          PaymentProvider
-  merchantAccount   String
-  providerEventId   String
-  eventType         String
-  payloadHash       String
-  status            WebhookProcessingStatus @default(RECEIVED)
-  receivedAt        DateTime                @default(now())
-  verifiedAt        DateTime?
-  processedAt       DateTime?
-  failureCode       String?
-  failureMessage    String?
+  id              String                   @id @default(cuid())
+  provider        PaymentProvider
+  merchantAccount String
+  providerEventId String
+  eventType       String
+  payloadHash     String
+  status          WebhookProcessingStatus  @default(RECEIVED)
+  receivedAt      DateTime                 @default(now())
+  verifiedAt      DateTime?
+  processedAt     DateTime?
+  failureCode     String?
+  failureMessage  String?
 
   @@unique([provider, merchantAccount, providerEventId])
   @@index([provider, status, receivedAt])
