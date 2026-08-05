@@ -36,11 +36,29 @@ test("learner today dashboard keeps its primary action visible", async ({ page }
   await expectNoHorizontalOverflow(page);
 });
 
-test("admin dashboard renders explicit empty metric states", async ({ page }) => {
+test("Video Lab validates a source and reveals the demo lesson", async ({ page }) => {
+  await page.goto("/app/video-lab");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Biến transcript thành một bài học",
+  );
+
+  await page.getByLabel("Liên kết YouTube").fill("https://www.youtube.com/watch?v=demo");
+  await page.getByRole("button", { name: "Xem bài học mẫu" }).click();
+
+  await expect(
+    page.getByRole("heading", {
+      name: "How responsibility shapes difficult decisions",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("conscience", { exact: true }).first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
+test("admin dashboard renders an explicit API foundation state", async ({ page }) => {
   await page.goto("http://127.0.0.1:3001/admin");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Tổng quan hệ thống",
   );
-  await expect(page.getByText("Chưa có dữ liệu vận hành thật")).toBeVisible();
+  await expect(page.getByText("Admin foundation — chưa nối business logic")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
