@@ -8,6 +8,11 @@ const booleanFromEnvironment = z
   .default("false")
   .transform((value) => value === "true");
 
+const enabledBooleanFromEnvironment = z
+  .enum(["true", "false"])
+  .default("true")
+  .transform((value) => value === "true");
+
 const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_URL: z.url().default("http://localhost:3000"),
@@ -32,6 +37,47 @@ const environmentSchema = z.object({
   AUTH_REMEMBER_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
   AUTH_TOKEN_TTL_MINUTES: z.coerce.number().int().min(5).max(1440).default(30),
   AUTH_DEV_TOKENS_ENABLED: booleanFromEnvironment,
+  AUTH_RATE_LIMIT_ENABLED: enabledBooleanFromEnvironment,
+  AUTH_RATE_LIMIT_PREFIX: z.string().min(1).default("levelup:auth-rate"),
+  AUTH_LOGIN_REQUEST_LIMIT: z.coerce.number().int().min(1).max(10_000).default(30),
+  AUTH_LOGIN_REQUEST_WINDOW_SECONDS: z.coerce
+    .number()
+    .int()
+    .min(10)
+    .max(86_400)
+    .default(300),
+  AUTH_LOGIN_FAILURE_LIMIT: z.coerce.number().int().min(1).max(100).default(5),
+  AUTH_LOGIN_FAILURE_WINDOW_SECONDS: z.coerce
+    .number()
+    .int()
+    .min(10)
+    .max(86_400)
+    .default(900),
+  AUTH_REGISTER_LIMIT: z.coerce.number().int().min(1).max(1_000).default(10),
+  AUTH_REGISTER_WINDOW_SECONDS: z.coerce
+    .number()
+    .int()
+    .min(10)
+    .max(604_800)
+    .default(3_600),
+  AUTH_PASSWORD_RESET_IP_LIMIT: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(1_000)
+    .default(10),
+  AUTH_PASSWORD_RESET_EMAIL_LIMIT: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(3),
+  AUTH_PASSWORD_RESET_WINDOW_SECONDS: z.coerce
+    .number()
+    .int()
+    .min(10)
+    .max(604_800)
+    .default(3_600),
 });
 
 export type AppEnvironment = z.infer<typeof environmentSchema>;
