@@ -47,15 +47,13 @@ export function formatCurrency(
     throw new TypeError("Currency must be a three-letter ISO code");
   }
 
-  const fractionDigits = new Intl.NumberFormat(locale, {
+  const formatter = new Intl.NumberFormat(locale, {
     style: "currency",
     currency: normalizedCurrency,
-  }).resolvedOptions().maximumFractionDigits;
+  });
+  const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
 
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: normalizedCurrency,
-  }).format(amountMinor / 10 ** fractionDigits);
+  return formatter.format(amountMinor / 10 ** fractionDigits);
 }
 
 export function formatRelativeTime(
