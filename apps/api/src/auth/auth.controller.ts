@@ -6,6 +6,7 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
 import { parseEnvironment } from "@levelup/config";
@@ -21,6 +22,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 
 import { createOpaqueToken } from "../common/crypto.js";
 import type { AuthContext } from "./auth-context.js";
+import { AuthRateLimitService } from "./auth-rate-limit.service.js";
 import {
   ForgotPasswordDto,
   LoginDto,
@@ -41,6 +43,7 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly sessions: SessionService,
+    private readonly rateLimits: AuthRateLimitService,
   ) {}
 
   @Get("csrf")
@@ -63,6 +66,7 @@ export class AuthController {
     @Req() request: FastifyRequest,
   ): Promise<RegisterResponse> {
     assertPreAuthCsrf(request);
+    await this.rateLimits.consumeRegistration(request.ip);
     return this.auth.register(input);
   }
 
@@ -83,11 +87,22 @@ export class AuthController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<SessionResponse> {
     assertPreAuthCsrf(request);
-    const result = await this.auth.login(input, {
-      userAgent: request.headers["user-agent"],
-      ip: request.ip,
-    });
+    await this.rateLimits.assertLoginAllowed(input.email, request.ip);
 
+    let result: Awaited<ReturnType<AuthService["login"]>>;
+    try {
+      result = await this.auth.login(input, {
+        userAgent: request.headers["user-agent"],
+        ip: request.ip,
+      });
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        await this.rateLimits.recordLoginFailure(input.email, request.ip);
+      }
+      throw error;
+    }
+
+    await this.rateLimits.clearLoginFailures(input.email, request.ip);
     this.setSessionCookies(
       reply,
       result.session.sessionToken,
@@ -215,6 +230,7 @@ export class AuthController {
     @Req() request: FastifyRequest,
   ): Promise<PasswordResetRequestedResponse> {
     assertPreAuthCsrf(request);
+    await this.rateLimits.consumePasswordReset(input.email, request.ip);
     return this.auth.requestPasswordReset(input.email);
   }
 

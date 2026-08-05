@@ -56,6 +56,15 @@ Turn the current UI foundation into the first real product slice:
 - update route and architecture documentation;
 - run lint, typecheck, tests, build and responsive E2E in GitHub Actions.
 
+### Commit 6 — Session hardening and distributed abuse protection
+
+- protect all learner routes with server-side session validation;
+- list, rotate and selectively revoke active sessions;
+- add Redis-backed request quotas for registration, login and password reset;
+- lock an email/IP login subject after repeated invalid credentials;
+- hash rate-limit subjects so raw email and IP values are not stored in Redis keys;
+- fail closed with a structured service-unavailable response when the distributed guard cannot be reached.
+
 ## Security decisions
 
 - Passwords: Argon2id; raw passwords are never logged or stored.
@@ -66,13 +75,13 @@ Turn the current UI foundation into the first real product slice:
 - Enumeration resistance: login and password-reset errors do not disclose account existence beyond the minimum required UX.
 - Ownership: every goal query is scoped by the authenticated user ID.
 - No production email claim: local development may expose tokens only behind `AUTH_DEV_TOKENS_ENABLED=true`; production defaults to false.
+- Distributed rate limits: Redis counters use atomic increment/expiry scripts and keyed fingerprints derived from `SESSION_SECRET`.
 
 ## Deferred
 
 - Google OAuth;
 - admin MFA;
 - full RBAC and permission management;
-- Redis-distributed rate limiting;
 - email provider delivery worker;
 - campaign generation from a goal;
 - payment and entitlement activation.
