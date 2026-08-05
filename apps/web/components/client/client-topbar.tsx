@@ -1,3 +1,6 @@
+"use client";
+
+import type { AuthenticatedUser } from "@levelup/contracts";
 import { Avatar, Dropdown } from "@levelup/ui";
 import {
   Bell,
@@ -7,14 +10,34 @@ import {
   Settings,
   User,
 } from "@levelup/ui/icons";
+import { useState } from "react";
 
-import { demoLearner } from "../../data/demo/client";
+import { apiRequest } from "../../lib/api-client";
 
 interface ClientTopbarProps {
   pageTitle?: string;
+  user: AuthenticatedUser;
 }
 
-export function ClientTopbar({ pageTitle }: ClientTopbarProps) {
+export function ClientTopbar({ pageTitle, user }: ClientTopbarProps) {
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function logout(): Promise<void> {
+    setLoggingOut(true);
+
+    try {
+      await apiRequest<{ loggedOut: true }>("/auth/logout", {
+        method: "POST",
+      });
+      window.location.assign("/dang-nhap");
+    } catch {
+      window.alert(
+        "Không thể đăng xuất lúc này. Hãy kiểm tra kết nối và thử lại.",
+      );
+      setLoggingOut(false);
+    }
+  }
+
   return (
     <header className="client-topbar">
       <div className="client-topbar__title">
@@ -47,10 +70,10 @@ export function ClientTopbar({ pageTitle }: ClientTopbarProps) {
           label="Mở menu tài khoản"
           trigger={
             <span className="client-user-trigger">
-              <Avatar name={demoLearner.name} size="sm" />
+              <Avatar name={user.displayName} size="sm" />
               <span className="client-user-trigger__copy">
-                <strong>{demoLearner.name}</strong>
-                <small>Level {demoLearner.level}</small>
+                <strong>{user.displayName}</strong>
+                <small>{user.email}</small>
               </span>
               <ChevronDown size={16} aria-hidden="true" />
             </span>
@@ -70,9 +93,10 @@ export function ClientTopbar({ pageTitle }: ClientTopbarProps) {
             },
             {
               id: "logout",
-              label: "Đăng xuất",
-              disabled: true,
+              label: loggingOut ? "Đang đăng xuất..." : "Đăng xuất",
+              disabled: loggingOut,
               destructive: true,
+              onSelect: logout,
               icon: <LogOut size={17} aria-hidden="true" />,
             },
           ]}

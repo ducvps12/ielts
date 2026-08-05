@@ -41,6 +41,23 @@ export interface SessionResponse {
   expiresAt: string;
 }
 
+export interface SessionSummary {
+  id: string;
+  current: boolean;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+}
+
+export interface SessionListResponse {
+  sessions: SessionSummary[];
+}
+
+export interface SessionRevokedResponse {
+  revoked: boolean;
+  currentSessionRevoked: boolean;
+}
+
 export interface PasswordResetRequest {
   email: string;
 }

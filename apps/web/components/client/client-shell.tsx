@@ -1,23 +1,25 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import type { AuthenticatedUser } from "@levelup/contracts";
 import { Drawer, IconButton } from "@levelup/ui";
 import { Menu } from "@levelup/ui/icons";
+import { usePathname } from "next/navigation";
+import { useState, type ReactNode } from "react";
 
 import { BrandLogo } from "../marketing/brand-logo";
-import { ClientSidebar } from "./client-sidebar";
-import { ClientTopbar } from "./client-topbar";
 import {
   clientNavigation,
   isClientRouteActive,
 } from "./client-navigation";
+import { ClientSidebar } from "./client-sidebar";
+import { ClientTopbar } from "./client-topbar";
 
 interface ClientShellProps {
   children: ReactNode;
+  user: AuthenticatedUser;
 }
 
-export function ClientShell({ children }: ClientShellProps) {
+export function ClientShell({ children, user }: ClientShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const activeItem = clientNavigation.find((item) =>
@@ -44,7 +46,7 @@ export function ClientShell({ children }: ClientShellProps) {
           </IconButton>
         </div>
 
-        <ClientTopbar pageTitle={activeItem?.label} />
+        <ClientTopbar pageTitle={activeItem?.label} user={user} />
 
         <main id="main-content" className="client-main">
           {children}

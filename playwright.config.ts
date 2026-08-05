@@ -22,20 +22,26 @@ export default defineConfig({
     ? [["list"], ["html", { open: "never" }]]
     : "list",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
   webServer: [
     {
+      command: "pnpm --filter @levelup/api dev",
+      url: "http://localhost:4000/api/v1/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    {
       command: "pnpm --filter @levelup/web dev",
-      url: "http://127.0.0.1:3000",
+      url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
     {
       command: "pnpm --filter @levelup/admin dev",
-      url: "http://127.0.0.1:3001/admin",
+      url: "http://localhost:3001/admin",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
