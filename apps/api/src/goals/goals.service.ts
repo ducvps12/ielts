@@ -15,22 +15,11 @@ import {
   prisma,
 } from "@levelup/database";
 
+import { canTransitionGoalStatus } from "./goal-status.js";
 import type {
   CreateGoalDto,
   UpsertLanguageProfileDto,
 } from "./goals.dto.js";
-
-const allowedTransitions: Record<GoalStatus, ReadonlySet<GoalStatus>> = {
-  DRAFT: new Set([GoalStatus.ACTIVE, GoalStatus.ABANDONED]),
-  ACTIVE: new Set([
-    GoalStatus.PAUSED,
-    GoalStatus.COMPLETED,
-    GoalStatus.ABANDONED,
-  ]),
-  PAUSED: new Set([GoalStatus.ACTIVE, GoalStatus.ABANDONED]),
-  COMPLETED: new Set(),
-  ABANDONED: new Set(),
-};
 
 function toJsonValue(
   value: Record<string, unknown> | undefined,
@@ -151,10 +140,7 @@ export class GoalsService {
     }
 
     const nextStatus = GoalStatus[requestedStatus];
-    if (
-      nextStatus !== current.status &&
-      !allowedTransitions[current.status].has(nextStatus)
-    ) {
+    if (!canTransitionGoalStatus(current.status, nextStatus)) {
       throw new BadRequestException({
         code: "GOAL_STATUS_TRANSITION_INVALID",
         message: `Không thể chuyển mục tiêu từ ${current.status} sang ${nextStatus}.`,
