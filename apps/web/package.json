@@ -1,18 +1,18 @@
 {
   "name": "@levelup/web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
-    "lint": "next lint",
+    "lint": "eslint app components data tests --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run",
-    "test:e2e": "echo 'E2E pending phase 2'"
+    "test:integration": "vitest run"
   },
   "dependencies": {
+    "@levelup/i18n": "workspace:*",
     "@levelup/ui": "workspace:*",
     "next": "^15.5.2",
     "react": "^19.1.1",
