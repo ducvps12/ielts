@@ -1,18 +1,9 @@
 import { Worker, type Job } from "bullmq";
 import { parseEnvironment } from "@levelup/config";
 
-const QUEUE_NAME = "levelup-jobs";
+import { connectionFromUrl } from "./redis-connection.js";
 
-function connectionFromUrl(redisUrl: string) {
-  const parsed = new URL(redisUrl);
-  return {
-    host: parsed.hostname,
-    port: Number(parsed.port || 6379),
-    username: parsed.username || undefined,
-    password: parsed.password || undefined,
-    ...(parsed.protocol === "rediss:" ? { tls: {} } : {}),
-  };
-}
+const QUEUE_NAME = "levelup-jobs";
 
 async function processJob(job: Job): Promise<Record<string, unknown>> {
   switch (job.name) {
@@ -43,7 +34,10 @@ async function bootstrap(): Promise<void> {
   });
 
   worker.on("failed", (job, error) => {
-    console.error(`[worker] failed ${job?.name ?? "unknown"}#${job?.id ?? "unknown"}`, error);
+    console.error(
+      `[worker] failed ${job?.name ?? "unknown"}#${job?.id ?? "unknown"}`,
+      error,
+    );
   });
 
   const shutdown = async (signal: string): Promise<void> => {
