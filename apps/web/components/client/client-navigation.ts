@@ -1,4 +1,3 @@
-import type { ComponentType } from "react";
 import {
   BarChart3,
   Bell,
@@ -12,10 +11,7 @@ import {
   Users,
 } from "@levelup/ui/icons";
 
-type NavigationIcon = ComponentType<{
-  size?: number;
-  "aria-hidden"?: boolean;
-}>;
+type NavigationIcon = typeof Home;
 
 export interface ClientNavigationItem {
   label: string;
