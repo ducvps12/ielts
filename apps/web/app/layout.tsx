@@ -9,6 +9,7 @@ import "../styles/client-pages.css";
 import "../styles/video-lab.css";
 import "../styles/settings.css";
 import "../styles/commerce.css";
+import "../styles/goals.css";
 
 export const metadata: Metadata = {
   title: {
