@@ -1,17 +1,17 @@
 {
   "name": "@levelup/worker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
-    "lint": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:integration": "vitest run --passWithNoTests",
-    "test:e2e": "echo 'Worker E2E pending'"
+    "test:e2e": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@levelup/config": "workspace:*",
