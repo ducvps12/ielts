@@ -1,18 +1,38 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import type {
+  LoginRequest,
+  PasswordResetRequestedResponse,
+  RegisterRequest,
+  RegisterResponse,
+  SessionResponse,
+} from "@levelup/contracts";
 import {
   Alert,
   Button,
   Checkbox,
   Input,
 } from "@levelup/ui";
-import { CircleAlert, LockKeyhole } from "@levelup/ui/icons";
+import { CircleAlert, CircleCheck, LockKeyhole } from "@levelup/ui/icons";
+
+import {
+  ApiClientError,
+  withFreshCsrf,
+} from "../../lib/api-client";
 
 export type AuthMode = "login" | "register" | "forgot" | "reset";
 
 interface AuthFormProps {
   mode: AuthMode;
+}
+
+interface FormNotice {
+  tone: "info" | "success" | "danger";
+  title: string;
+  description: string;
+  href?: string;
+  hrefLabel?: string;
 }
 
 const content = {
@@ -38,16 +58,136 @@ const content = {
   },
 } as const;
 
+function formString(form: FormData, key: string): string {
+  const value = form.get(key);
+  return typeof value === "string" ? value : "";
+}
+
 export function AuthForm({ mode }: AuthFormProps) {
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState<FormNotice>();
   const copy = content[mode];
   const showName = mode === "register";
   const showPassword = mode === "login" || mode === "register" || mode === "reset";
   const showConfirmPassword = mode === "register" || mode === "reset";
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
-    setSubmitted(true);
+    setNotice(undefined);
+    setLoading(true);
+
+    const form = new FormData(event.currentTarget);
+    const password = formString(form, "password");
+    const confirmPassword = formString(form, "confirmPassword");
+
+    if (showConfirmPassword && password !== confirmPassword) {
+      setNotice({
+        tone: "danger",
+        title: "Mật khẩu chưa khớp",
+        description: "Hãy nhập lại cùng một mật khẩu ở cả hai ô.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (mode === "login") {
+        const payload: LoginRequest = {
+          email: formString(form, "email"),
+          password,
+          remember: form.get("remember") === "on",
+        };
+        await withFreshCsrf<SessionResponse>("/auth/login", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        window.location.assign("/app/hom-nay");
+        return;
+      }
+
+      if (mode === "register") {
+        const payload: RegisterRequest = {
+          displayName: formString(form, "displayName"),
+          email: formString(form, "email"),
+          password,
+          acceptedTerms: form.get("terms") === "on",
+        };
+        const response = await withFreshCsrf<RegisterResponse>("/auth/register", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        const token = response.developmentVerificationToken;
+        setNotice({
+          tone: "success",
+          title: "Tài khoản đã được tạo",
+          description: token
+            ? "Môi trường phát triển đã tạo liên kết xác minh cục bộ."
+            : "Hãy kiểm tra email để xác minh tài khoản trước khi đăng nhập.",
+          ...(token
+            ? {
+                href: `/xac-minh-email?token=${encodeURIComponent(token)}`,
+                hrefLabel: "Xác minh tài khoản",
+              }
+            : {}),
+        });
+        return;
+      }
+
+      if (mode === "forgot") {
+        const response = await withFreshCsrf<PasswordResetRequestedResponse>(
+          "/auth/forgot-password",
+          {
+            method: "POST",
+            body: JSON.stringify({ email: formString(form, "email") }),
+          },
+        );
+        const token = response.developmentResetToken;
+        setNotice({
+          tone: "success",
+          title: "Đã tiếp nhận yêu cầu",
+          description:
+            "Nếu email tồn tại, hệ thống sẽ gửi hướng dẫn đặt lại mật khẩu.",
+          ...(token
+            ? {
+                href: `/dat-lai-mat-khau?token=${encodeURIComponent(token)}`,
+                hrefLabel: "Mở liên kết phát triển",
+              }
+            : {}),
+        });
+        return;
+      }
+
+      const token = new URLSearchParams(window.location.search).get("token");
+      if (!token) {
+        throw new ApiClientError(400, {
+          code: "RESET_TOKEN_MISSING",
+          message: "Liên kết đặt lại mật khẩu đang thiếu token.",
+        });
+      }
+
+      await withFreshCsrf<{ reset: true }>("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
+      });
+      setNotice({
+        tone: "success",
+        title: "Mật khẩu đã được cập nhật",
+        description: "Tất cả phiên cũ đã bị thu hồi. Bạn có thể đăng nhập lại.",
+        href: "/dang-nhap",
+        hrefLabel: "Đăng nhập",
+      });
+    } catch (error: unknown) {
+      setNotice({
+        tone: "danger",
+        title: "Không thể hoàn tất yêu cầu",
+        description:
+          error instanceof ApiClientError
+            ? error.message
+            : "Kết nối tới máy chủ thất bại. Hãy kiểm tra API và thử lại.",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -60,13 +200,26 @@ export function AuthForm({ mode }: AuthFormProps) {
         <p>{copy.description}</p>
       </div>
 
-      {submitted ? (
-        <Alert
-          tone="info"
-          icon={<CircleAlert size={20} aria-hidden="true" />}
-          title="UI đã sẵn sàng, API xác thực chưa được nối"
-          description="Biểu mẫu đang chạy ở chế độ giao diện nền. Không có dữ liệu đăng nhập nào được gửi hoặc lưu."
-        />
+      {notice ? (
+        <div>
+          <Alert
+            tone={notice.tone}
+            icon={
+              notice.tone === "success" ? (
+                <CircleCheck size={20} aria-hidden="true" />
+              ) : (
+                <CircleAlert size={20} aria-hidden="true" />
+              )
+            }
+            title={notice.title}
+            description={notice.description}
+          />
+          {notice.href ? (
+            <p className="auth-card__notice-action">
+              <a href={notice.href}>{notice.hrefLabel}</a>
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
@@ -77,6 +230,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             autoComplete="name"
             placeholder="Ví dụ: Minh Đức"
             required
+            disabled={loading}
           />
         ) : null}
 
@@ -89,6 +243,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             autoComplete="email"
             placeholder="ban@example.com"
             required
+            disabled={loading}
           />
         ) : null}
 
@@ -98,8 +253,11 @@ export function AuthForm({ mode }: AuthFormProps) {
             name="password"
             type="password"
             autoComplete={mode === "login" ? "current-password" : "new-password"}
-            hint="Tối thiểu 8 ký tự trong bản UI; quy tắc thật sẽ do API xác thực quyết định."
+            hint="Tối thiểu 10 ký tự, tối đa 128 ký tự."
+            minLength={10}
+            maxLength={128}
             required
+            disabled={loading}
           />
         ) : null}
 
@@ -109,13 +267,16 @@ export function AuthForm({ mode }: AuthFormProps) {
             name="confirmPassword"
             type="password"
             autoComplete="new-password"
+            minLength={10}
+            maxLength={128}
             required
+            disabled={loading}
           />
         ) : null}
 
         {mode === "login" ? (
           <div className="auth-form__options">
-            <Checkbox label="Ghi nhớ phiên đăng nhập" name="remember" />
+            <Checkbox label="Ghi nhớ phiên đăng nhập" name="remember" disabled={loading} />
             <a href="/quen-mat-khau">Quên mật khẩu?</a>
           </div>
         ) : null}
@@ -126,10 +287,11 @@ export function AuthForm({ mode }: AuthFormProps) {
             description="Điều khoản và chính sách quyền riêng tư phải được rà soát pháp lý trước khi sản phẩm mở chính thức."
             name="terms"
             required
+            disabled={loading}
           />
         ) : null}
 
-        <Button type="submit" size="lg" block>
+        <Button type="submit" size="lg" block loading={loading}>
           {copy.submit}
         </Button>
       </form>
