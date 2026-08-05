@@ -12,7 +12,8 @@ import { X } from "../icons";
 import { cn } from "../utils/cn";
 import { IconButton } from "./actions";
 
-export interface TooltipProps extends HTMLAttributes<HTMLSpanElement> {
+export interface TooltipProps
+  extends Omit<HTMLAttributes<HTMLSpanElement>, "content"> {
   content: ReactNode;
   children: ReactNode;
   placement?: "top" | "right" | "bottom" | "left";
