@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "@levelup/ui/styles.css";
 import "./styles.css";
 import "../styles/marketing.css";
+import "../styles/public-pages.css";
+import "../styles/auth.css";
 
 export const metadata: Metadata = {
   title: {

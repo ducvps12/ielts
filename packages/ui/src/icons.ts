@@ -19,6 +19,7 @@ export {
   LayoutDashboard,
   LockKeyhole,
   LogOut,
+  Mail,
   Menu,
   MessageCircle,
   MoreHorizontal,
