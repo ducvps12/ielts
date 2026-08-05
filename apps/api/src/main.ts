@@ -1,5 +1,6 @@
 import "reflect-metadata";
 
+import fastifyCookie from "@fastify/cookie";
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import {
@@ -14,14 +15,16 @@ async function bootstrap(): Promise<void> {
   const environment = parseEnvironment();
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    new FastifyAdapter({ trustProxy: true }),
     { bufferLogs: true },
   );
 
+  await app.register(fastifyCookie);
   app.setGlobalPrefix("api/v1");
   app.enableCors({
     origin: [environment.APP_URL, environment.ADMIN_URL],
     credentials: true,
+    allowedHeaders: ["Content-Type", "X-CSRF-Token", "X-Request-ID"],
   });
   app.useGlobalPipes(
     new ValidationPipe({
