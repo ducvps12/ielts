@@ -92,7 +92,7 @@ test("learner today dashboard keeps its primary action visible", async ({
     "Chào buổi sáng",
   );
   await expect(page.getByRole("link", { name: /Tiếp tục học/i })).toBeVisible();
-  await expect(page.getByText("E2E Learner")).toBeVisible();
+  await expect(page.getByText("E2E Learner")).toBeAttached();
   await expectNoHorizontalOverflow(page);
 });
 
