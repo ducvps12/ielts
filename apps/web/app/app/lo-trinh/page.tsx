@@ -3,6 +3,7 @@ import {
   ArrowRight,
   CalendarDays,
   CircleAlert,
+  Plus,
   Target,
 } from "@levelup/ui/icons";
 
@@ -25,11 +26,15 @@ export default function JourneyPage() {
           <span>BẢN ĐỒ 180 NGÀY</span>
           <h1>Lộ trình IELTS 7.5</h1>
           <p>
-            Xem giai đoạn hiện tại, checkpoint tiếp theo và lý do từng Arc tồn tại.
-            Các Arc chưa mở vẫn được hiển thị để định hướng, không gây áp lực học trước.
+            Đây là template tham chiếu đầu tiên. Bạn có thể tạo một goal riêng cho
+            ngôn ngữ, học tập, sức khỏe hoặc bất kỳ kết quả nào cần hệ thống hóa.
           </p>
         </div>
         <div className="client-page-header__actions">
+          <LinkButton href="/app/muc-tieu-moi" variant="outline">
+            <Plus size={17} aria-hidden="true" />
+            Tạo goal riêng
+          </LinkButton>
           <LinkButton href="/app/hom-nay">
             Quay lại hôm nay
             <ArrowRight size={17} aria-hidden="true" />
@@ -67,8 +72,8 @@ export default function JourneyPage() {
       <Alert
         tone="info"
         icon={<CircleAlert size={20} aria-hidden="true" />}
-        title="Lộ trình đang dùng demo data có cấu trúc"
-        description="Khi Goal Engine được nối, campaign sẽ bám đúng template version và timezone của người học."
+        title="Lộ trình IELTS vẫn đang dùng demo data có cấu trúc"
+        description="Custom Goal API đã được nối; campaign và quest generator cho từng goal là slice tiếp theo."
       />
 
       <section className="client-journey-map" aria-labelledby="journey-map-title">
