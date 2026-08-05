@@ -4,9 +4,9 @@ import { NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { prisma } from "@levelup/database";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { GoalsService } from "../goals/goals.service.js";
 import { AuthService } from "./auth.service.js";
 import { SessionService } from "./session.service.js";
-import { GoalsService } from "../goals/goals.service.js";
 
 process.env.AUTH_DEV_TOKENS_ENABLED = "true";
 
@@ -84,6 +84,59 @@ describe.sequential("identity and owned goal integration", () => {
     await expect(
       goals.get("another-user-id", goal.id, "UTC"),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("lists, rotates and selectively revokes active sessions", async () => {
+    const primaryLogin = await auth.login(
+      { email, password, remember: true },
+      { userAgent: "vitest-primary", ip: "127.0.0.1" },
+    );
+    const secondaryLogin = await auth.login(
+      { email, password, remember: false },
+      { userAgent: "vitest-secondary", ip: "127.0.0.2" },
+    );
+    const primaryContext = await sessions.authenticate(
+      primaryLogin.session.sessionToken,
+    );
+    const secondaryContext = await sessions.authenticate(
+      secondaryLogin.session.sessionToken,
+    );
+
+    const activeSessions = await sessions.listActiveForUser(
+      primaryContext.user.id,
+      primaryContext.sessionId,
+    );
+    expect(activeSessions).toHaveLength(2);
+    expect(
+      activeSessions.find((session) => session.id === primaryContext.sessionId)
+        ?.current,
+    ).toBe(true);
+
+    const rotated = await sessions.rotate({
+      sessionId: primaryContext.sessionId,
+      userId: primaryContext.user.id,
+      userAgent: "vitest-primary-rotated",
+      ip: "127.0.0.1",
+    });
+
+    await expect(
+      sessions.authenticate(primaryLogin.session.sessionToken),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    const rotatedContext = await sessions.authenticate(rotated.sessionToken);
+    expect(rotatedContext.sessionId).not.toBe(primaryContext.sessionId);
+    expect(rotated.expiresAt.toISOString()).toBe(
+      primaryLogin.session.expiresAt.toISOString(),
+    );
+
+    expect(
+      await sessions.revokeForUser(
+        primaryContext.user.id,
+        secondaryContext.sessionId,
+      ),
+    ).toBe(true);
+    await expect(
+      sessions.authenticate(secondaryLogin.session.sessionToken),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it("resets the password, revokes old sessions and accepts the new secret", async () => {
