@@ -8,7 +8,10 @@ export type {
   RegisterRequest,
   RegisterResponse,
   ResetPasswordRequest,
+  SessionListResponse,
   SessionResponse,
+  SessionRevokedResponse,
+  SessionSummary,
   VerifyEmailRequest,
 } from "./auth.js";
 
