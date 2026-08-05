@@ -1,10 +1,21 @@
+import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals.js";
-import nextTypescript from "eslint-config-next/typescript.js";
+
+const compat = new FlatCompat({
+  baseDirectory: import.meta.dirname,
+  recommendedConfig: js.configs.recommended,
+});
 
 export default defineConfig([
-  ...nextVitals,
-  ...nextTypescript,
+  ...compat.config({
+    extends: ["next/core-web-vitals", "next/typescript"],
+    settings: {
+      next: {
+        rootDir: ["apps/web/", "apps/admin/"],
+      },
+    },
+  }),
   {
     rules: {
       "@next/next/no-html-link-for-pages": "off",
