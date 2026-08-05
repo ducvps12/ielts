@@ -2,115 +2,118 @@
 
 Routes are product contracts. New routes require an owner module, permission model, loading/empty/error behavior, and analytics/privacy review where relevant.
 
+Status legend:
+
+- **Implemented** — source route and quality-gate coverage exist.
+- **Foundation** — UI or contract exists, but the full business flow is not connected.
+- **Planned** — reserved in architecture only.
+
 ## Public web — `apps/web`
 
-- `/` — marketing home.
-- `/cach-hoat-dong` — product explanation.
-- `/thu-thach/ielts-75` — IELTS campaign landing page.
-- `/bang-gia` — reserved; hidden while commerce is disabled.
-- `/gioi-thieu` — about.
-- `/tro-giup` — help centre index.
-- `/tro-giup/[slug]` — help article.
-- `/dieu-khoan` — terms draft.
-- `/quyen-rieng-tu` — privacy draft.
-- `/cookie` — cookie policy draft.
-- `/dang-nhap` — login.
-- `/dang-ky` — registration.
-- `/xac-minh-email` — email verification state.
-- `/quen-mat-khau` — reset request.
-- `/dat-lai-mat-khau` — reset completion.
+- `/` — marketing home. **Implemented**
+- `/cach-hoat-dong` — product explanation. **Implemented**
+- `/thu-thach/ielts-75` — IELTS template landing page. **Implemented**
+- `/bang-gia` — provider-readiness UI; checkout remains disabled. **Implemented UI**
+- `/gioi-thieu` — about. **Implemented**
+- `/tro-giup` — help centre index. **Implemented**
+- `/lien-he` — contact foundation. **Implemented**
+- `/dieu-khoan` — terms draft. **Implemented draft**
+- `/quyen-rieng-tu` — privacy draft. **Implemented draft**
+- `/chinh-sach-cookie` — cookie policy draft. **Implemented draft**
+- `/dang-nhap` — server-backed login. **Implemented**
+- `/dang-ky` — server-backed registration. **Implemented**
+- `/xac-minh-email?token=...` — one-time email verification. **Implemented**
+- `/quen-mat-khau` — reset request. **Implemented**
+- `/dat-lai-mat-khau?token=...` — reset completion. **Implemented**
 
 ## Learner app — `apps/web/app/*`
 
-- `/app/hom-nay` — daily command center.
-- `/app/onboarding` — diagnostic and goal setup.
-- `/app/ke-hoach` — campaign calendar and plan.
-- `/app/nhiem-vu/[assignmentId]` — quest detail and submission.
-- `/app/luyen-tap` — skill hub.
-- `/app/luyen-tap/listening`
-- `/app/luyen-tap/reading`
-- `/app/luyen-tap/writing`
-- `/app/luyen-tap/speaking`
-- `/app/tien-do` — analytics and milestones.
-- `/app/thanh-tich` — achievements.
-- `/app/thong-bao` — notification inbox.
-- `/app/ho-so` — learner profile.
-- `/app/cai-dat` — account, timezone, accessibility, and notification preferences.
+- `/app/hom-nay` — daily command center. **Demo data foundation**
+- `/app/muc-tieu-moi` — authenticated custom-goal creation. **Implemented**
+- `/app/lo-trinh` — journey and arc map. **Demo template foundation**
+- `/app/nhiem-vu` — quest list. **Demo data foundation**
+- `/app/nhiem-vu/[questId]` — quest detail. **Demo data foundation**
+- `/app/luyen-tap` — practice hub. **Foundation**
+- `/app/video-lab` — permitted transcript/video lesson workspace. **UI foundation**
+- `/app/tien-do` — analytics and milestones. **Demo data foundation**
+- `/app/thanh-tich` — achievements. **Foundation**
+- `/app/cong-dong` — private accountability community. **Foundation**
+- `/app/thong-bao` — notification inbox. **Foundation**
+- `/app/ho-so` — learner profile. **Foundation**
+- `/app/cai-dat` — locale, learning language and preferences. **UI foundation**
+
+The learner shell is visible before route-level authentication is added. All state-changing APIs are server-protected now; server redirects for the app shell are a later identity-hardening slice.
 
 ## Admin — `apps/admin`
 
-- `/login` — admin login entry.
-- `/` — operational dashboard.
-- `/users` and `/users/[userId]` — user operations.
-- `/roles` — roles and permissions.
-- `/goals` — goal search and diagnostics.
-- `/campaigns` — learner campaigns.
-- `/templates/campaigns` — campaign templates and versions.
-- `/templates/quests` — quest templates and versions.
-- `/content` — IELTS content library.
-- `/moderation/evidence` — evidence review queue.
-- `/notifications` — templates, delivery status, and failures.
-- `/jobs` — worker failures and safe replay.
-- `/settings` — typed product settings.
-- `/feature-flags` — rollout and emergency controls.
-- `/cms/pages` — static pages and legal drafts.
-- `/support` — support cases.
-- `/audit` — privileged action history.
-- `/system/health` — dependency and version status.
+The admin application is deployed separately and uses an `/admin` route namespace.
+
+- `/admin` — operational dashboard. **Foundation**
+- `/admin/users` — user operations. **Demo table foundation**
+- `/admin/goals` — goal operations. **Foundation**
+- `/admin/campaigns` — campaign operations. **Foundation**
+- `/admin/quests` — quest operations. **Foundation**
+- `/admin/content` — content operations. **Foundation**
+- `/admin/community` — moderation foundation. **Foundation**
+- `/admin/reports` — reporting foundation. **Foundation**
+- `/admin/notifications` — delivery foundation. **Foundation**
+- `/admin/settings` — typed settings foundation. **Foundation**
+- `/admin/audit-logs` — privileged action history. **Foundation**
+
+Admin authentication, MFA and server-enforced permissions remain planned and must be completed before deployment outside development.
 
 ## REST API — `apps/api`
 
-All endpoints are under `/v1`. Error responses use one envelope and stable machine-readable codes.
+All endpoints are under `/api/v1`. Cookie-authenticated mutations require `X-CSRF-Token`. Errors expose stable machine-readable codes when thrown by domain modules.
 
 ### System
-- `GET /v1/health/live`
-- `GET /v1/health/ready`
-- `GET /v1/version`
+
+- `GET /api/v1/health` — **Implemented**
+- `GET /api/v1/health/ready` — **Implemented**
+- `GET /api/v1/commerce/capabilities` — **Implemented, providers disabled**
+- `GET /api/v1/video-learning/capabilities` — **Implemented, ingestion disabled**
 
 ### Auth and identity
-- `POST /v1/auth/register`
-- `POST /v1/auth/login`
-- `POST /v1/auth/refresh`
-- `POST /v1/auth/logout`
-- `POST /v1/auth/logout-all`
-- `POST /v1/auth/verify-email`
-- `POST /v1/auth/password/forgot`
-- `POST /v1/auth/password/reset`
-- `GET /v1/me`
-- `PATCH /v1/me`
-- `PATCH /v1/me/preferences`
 
-### Goal and campaign
-- `POST /v1/goals`
-- `GET /v1/goals/current`
-- `PATCH /v1/goals/:goalId`
-- `POST /v1/goals/:goalId/activate`
-- `GET /v1/campaigns/current`
-- `GET /v1/campaigns/current/calendar`
+- `GET /api/v1/auth/csrf` — issue double-submit token. **Implemented**
+- `POST /api/v1/auth/register` — create pending account. **Implemented**
+- `POST /api/v1/auth/verify-email` — consume one-time verification token. **Implemented**
+- `POST /api/v1/auth/login` — create opaque server-side session. **Implemented**
+- `GET /api/v1/auth/session` — current session. **Implemented**
+- `POST /api/v1/auth/logout` — revoke current session. **Implemented**
+- `POST /api/v1/auth/forgot-password` — enumeration-resistant reset request. **Implemented**
+- `POST /api/v1/auth/reset-password` — rotate password and revoke sessions. **Implemented**
+- OAuth, logout-all, session inventory, MFA and account deletion — **Planned**
+
+### Goals and language profiles
+
+- `GET /api/v1/goals` — list goals owned by current user. **Implemented**
+- `POST /api/v1/goals` — create private custom goal. **Implemented**
+- `GET /api/v1/goals/:goalId` — owned goal detail. **Implemented**
+- `PATCH /api/v1/goals/:goalId/status` — validated lifecycle transition. **Implemented**
+- `GET /api/v1/language-profiles` — list learning profiles. **Implemented**
+- `PUT /api/v1/language-profiles/current` — upsert one language profile. **Implemented**
+- Goal-to-campaign generation and adaptive planning — **Planned**
 
 ### Quests and evidence
-- `GET /v1/quest-assignments/today`
-- `GET /v1/quest-assignments/:assignmentId`
-- `POST /v1/quest-assignments/:assignmentId/submissions`
-- `POST /v1/uploads/presign`
-- `POST /v1/evidence/:evidenceId/complete-upload`
+
+- Today assignments, quest completion, evidence uploads and Error Log APIs — **Planned**
 
 ### Progress and gamification
-- `GET /v1/progress/overview`
-- `GET /v1/progress/skills`
-- `GET /v1/rewards/balance`
-- `GET /v1/rewards/ledger`
-- `GET /v1/streaks/current`
-- `GET /v1/achievements`
+
+- XP/Gold ledger, streak, progress and achievement read models — **Planned**
 
 ### Admin namespace
-Admin endpoints live under `/v1/admin/*` and require explicit permissions. Initial resources: users, roles, goals, campaigns, templates, content, evidence reviews, settings, feature flags, notifications, jobs, support cases, and audit events.
+
+Admin endpoints will live under `/api/v1/admin/*` and require explicit permissions. No admin mutation API is implemented yet.
 
 ## API conventions
 
 - Cursor pagination for unbounded feeds; page pagination is acceptable for bounded admin tables.
-- `Idempotency-Key` required for reward-affecting or externally retryable commands.
-- `X-Request-Id` accepted and returned; generated when absent.
+- `Idempotency-Key` is required for reward-affecting, payment or externally retried commands.
+- Opaque authentication, verification and reset tokens are never stored raw.
+- Session cookies are httpOnly; CSRF tokens use a separate same-site cookie and request header.
 - Timestamps are ISO 8601 UTC. User timezone is a named IANA zone.
+- Goal reads and writes are always scoped to the authenticated user ID.
 - Validation errors identify fields without leaking internal implementation details.
-- Admin exports are permissioned, audited, size-limited, and asynchronous when large.
+- Admin exports will be permissioned, audited, size-limited and asynchronous when large.
