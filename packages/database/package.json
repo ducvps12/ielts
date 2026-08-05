@@ -1,6 +1,6 @@
 {
   "name": "@levelup/database",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -13,11 +13,11 @@
   },
   "scripts": {
     "build": "pnpm db:generate && tsc -p tsconfig.json",
-    "lint": "tsc --noEmit",
+    "lint": "eslint src prisma/seed.ts --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "test:integration": "vitest run --passWithNoTests",
-    "test:e2e": "echo 'No package E2E tests'",
+    "test:e2e": "vitest run --passWithNoTests",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
