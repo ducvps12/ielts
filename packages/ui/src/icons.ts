@@ -31,6 +31,7 @@ export {
   Play,
   Plus,
   RotateCcw,
+  Save,
   Search,
   Settings,
   ShieldCheck,
