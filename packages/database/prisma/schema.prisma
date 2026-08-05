@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum GoalTemplateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ABANDONED
+}
+
+enum QuestType {
+  MAIN
+  SIDE
+  BONUS
+  BOSS
+  DEBT
+}
+
+enum QuestStatus {
+  SCHEDULED
+  AVAILABLE
+  COMPLETED
+  SKIPPED
+  EXPIRED
+  EXCUSED
+}
+
+enum WalletTransactionKind {
+  EARN
+  SPEND
+  ADJUSTMENT
+  REVERSAL
+}
+
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  displayName      String
+  status           UserStatus        @default(PENDING)
+  locale           String            @default("vi-VN")
+  timezone         String            @default("Asia/Ho_Chi_Minh")
+  campaigns        Campaign[]
+  questCompletions QuestCompletion[]
+  wallet           Wallet?
+  auditLogs        AuditLog[]        @relation("AuditActor")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model GoalTemplate {
+  id             String             @id @default(cuid())
+  slug           String
+  name           String
+  description    String
+  status         GoalTemplateStatus @default(DRAFT)
+  version        Int                @default(1)
+  estimatedDays  Int
+  metadata       Json?
+  questTemplates QuestTemplate[]
+  campaigns      Campaign[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([slug, version])
+  @@index([status, createdAt])
+}
+
+model QuestTemplate {
+  id             String        @id @default(cuid())
+  goalTemplateId String
+  key            String
+  title          String
+  description    String
+  type           QuestType
+  dayOffset      Int
+  estimatedMins  Int
+  xpReward       Int           @default(0)
+  goldReward     Int           @default(0)
+  instructions   Json?
+  goalTemplate   GoalTemplate  @relation(fields: [goalTemplateId], references: [id], onDelete: Cascade)
+  questInstances QuestInstance[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([goalTemplateId, key])
+  @@index([goalTemplateId, dayOffset])
+}
+
+model Campaign {
+  id             String          @id @default(cuid())
+  userId         String
+  goalTemplateId String
+  status         CampaignStatus  @default(DRAFT)
+  startedAt      DateTime?
+  currentDay     Int             @default(1)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  goalTemplate   GoalTemplate    @relation(fields: [goalTemplateId], references: [id], onDelete: Restrict)
+  questInstances QuestInstance[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([userId, status])
+  @@index([goalTemplateId, status])
+}
+
+model QuestInstance {
+  id              String           @id @default(cuid())
+  campaignId      String
+  questTemplateId String
+  scheduledFor    DateTime
+  status          QuestStatus      @default(SCHEDULED)
+  customTitle     String?
+  campaign        Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  questTemplate   QuestTemplate    @relation(fields: [questTemplateId], references: [id], onDelete: Restrict)
+  completion      QuestCompletion?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([campaignId, questTemplateId, scheduledFor])
+  @@index([campaignId, scheduledFor, status])
+}
+
+model QuestCompletion {
+  id              String        @id @default(cuid())
+  questInstanceId String        @unique
+  userId          String
+  completedAt     DateTime      @default(now())
+  evidenceUrl     String?
+  note            String?
+  xpGranted       Int           @default(0)
+  goldGranted     Int           @default(0)
+  questInstance   QuestInstance @relation(fields: [questInstanceId], references: [id], onDelete: Restrict)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, completedAt])
+}
+
+model Wallet {
+  id           String              @id @default(cuid())
+  userId       String              @unique
+  goldBalance  Int                 @default(0)
+  user         User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transactions WalletTransaction[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model WalletTransaction {
+  id             String                       @id @default(cuid())
+  walletId       String
+  idempotencyKey String                       @unique
+  amount         Int
+  kind           WalletTransactionKind
+  sourceType     String
+  sourceId       String?
+  reason         String
+  wallet         Wallet                       @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  createdAt      DateTime                     @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([sourceType, sourceId])
+}
+
+model SystemSetting {
+  key       String   @id
+  category  String
+  value     Json
+  version   Int      @default(1)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?
+  action       String
+  resourceType String
+  resourceId   String
+  before       Json?
+  after        Json?
+  requestId    String?
+  actor        User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([resourceType, resourceId, createdAt])
+}

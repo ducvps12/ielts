@@ -3,10 +3,10 @@
   "tasks": {
     "dev": { "cache": false, "persistent": true },
     "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**"] },
-    "lint": { "dependsOn": ["^lint"] },
-    "typecheck": { "dependsOn": ["^typecheck"] },
-    "test": { "dependsOn": ["^test"], "outputs": ["coverage/**"] },
-    "test:integration": { "cache": false },
-    "test:e2e": { "cache": false }
+    "lint": { "dependsOn": ["^build", "^lint"] },
+    "typecheck": { "dependsOn": ["^build", "^typecheck"] },
+    "test": { "dependsOn": ["^build", "^test"], "outputs": ["coverage/**"] },
+    "test:integration": { "dependsOn": ["^build"], "cache": false },
+    "test:e2e": { "dependsOn": ["build"], "cache": false }
   }
 }
