@@ -15,6 +15,7 @@ apps/
 packages/
   config/    Typed environment configuration
   database/  Prisma schema, client và deterministic seed
+  ui/        Shared design tokens, icons and component foundation
 ```
 
 ## Chạy local
@@ -43,9 +44,10 @@ pnpm dev
 ## Quality gates
 
 ```bash
+pnpm lint
 pnpm typecheck
-pnpm build
 pnpm test
+pnpm build
 ```
 
 ## Nguyên tắc
@@ -57,4 +59,4 @@ pnpm test
 - Marketplace và commerce mặc định tắt cho tới khi hoàn tất security/legal gate.
 - Hệ thống không cam kết người dùng chắc chắn đạt IELTS 7.5.
 
-Xem thêm `AGENTS.md`, `docs/architecture.md` và `docs/phase-1-foundation.md`.
+Xem thêm `AGENTS.md`, `docs/architecture.md`, `docs/ROADMAP.md`, `docs/ui-audit-and-plan.md` và `docs/design-system.md`.
