@@ -10,7 +10,8 @@
 }
 
 .client-settings-page__header > span,
-.language-settings__heading > div > span {
+.language-settings__heading > div > span,
+.session-settings__heading > div > span {
   color: var(--color-primary);
   font-size: var(--text-xs);
   font-weight: var(--weight-black);
@@ -19,7 +20,8 @@
 }
 
 .client-settings-page__header h1,
-.language-settings__heading h2 {
+.language-settings__heading h2,
+.session-settings__heading h2 {
   margin: 0;
   letter-spacing: -0.045em;
 }
@@ -30,32 +32,38 @@
 
 .client-settings-page__header p,
 .language-settings__heading p,
-.language-settings__footer p {
+.language-settings__footer p,
+.session-settings__heading p,
+.session-settings__footer p {
   margin: 0;
   color: var(--color-text-muted);
   line-height: var(--leading-relaxed);
 }
 
-.language-settings .ui-card__header {
+.language-settings .ui-card__header,
+.session-settings .ui-card__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-5);
 }
 
-.language-settings__heading {
+.language-settings__heading,
+.session-settings__heading {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-4);
   align-items: flex-start;
 }
 
-.language-settings__heading > div {
+.language-settings__heading > div,
+.session-settings__heading > div {
   display: grid;
   gap: var(--space-2);
 }
 
-.language-settings__icon {
+.language-settings__icon,
+.session-settings__icon {
   display: grid;
   width: 3rem;
   height: 3rem;
@@ -65,7 +73,8 @@
   color: var(--color-primary);
 }
 
-.language-settings .ui-card__content {
+.language-settings .ui-card__content,
+.session-settings .ui-card__content {
   display: grid;
   gap: var(--space-6);
 }
@@ -103,7 +112,8 @@
   font-size: var(--text-lg);
 }
 
-.language-settings__footer {
+.language-settings__footer,
+.session-settings__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -114,6 +124,63 @@
 
 .language-settings__footer p {
   max-width: 42rem;
+  font-size: var(--text-sm);
+}
+
+.session-settings__loading {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.session-settings__list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.session-settings__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.session-settings__item-copy {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
+.session-settings__item-copy > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.session-settings__item-copy > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.session-settings__item-copy small {
+  color: var(--color-text-subtle);
+  line-height: var(--leading-relaxed);
+}
+
+.session-settings__footer > div {
+  display: grid;
+  max-width: 42rem;
+  gap: var(--space-1);
+}
+
+.session-settings__footer p {
   font-size: var(--text-sm);
 }
 
@@ -129,12 +196,16 @@
 
 @media (max-width: 40rem) {
   .language-settings .ui-card__header,
-  .language-settings__footer {
+  .session-settings .ui-card__header,
+  .language-settings__footer,
+  .session-settings__footer,
+  .session-settings__item {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .language-settings__heading {
+  .language-settings__heading,
+  .session-settings__heading {
     grid-template-columns: 1fr;
   }
 
@@ -142,7 +213,9 @@
     grid-template-columns: 1fr;
   }
 
-  .language-settings__footer .ui-button {
+  .language-settings__footer .ui-button,
+  .session-settings__footer .ui-button,
+  .session-settings__item .ui-button {
     width: 100%;
   }
 }
