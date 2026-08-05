@@ -7,6 +7,7 @@ import "../styles/auth.css";
 import "../styles/client.css";
 import "../styles/client-pages.css";
 import "../styles/video-lab.css";
+import "../styles/settings.css";
 
 export const metadata: Metadata = {
   title: {
