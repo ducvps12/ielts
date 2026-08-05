@@ -50,8 +50,8 @@ export function VerifyEmailCard() {
 
       {state === "loading" ? (
         <div aria-live="polite">
-          <Skeleton height={18} />
-          <Skeleton height={18} width="72%" />
+          <Skeleton height="1.125rem" />
+          <Skeleton height="1.125rem" width="72%" />
         </div>
       ) : (
         <Alert
