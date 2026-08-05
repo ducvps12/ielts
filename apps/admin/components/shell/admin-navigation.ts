@@ -1,4 +1,3 @@
-import type { ComponentType } from "react";
 import {
   BarChart3,
   Bell,
@@ -14,10 +13,7 @@ import {
 
 import type { AdminPermission } from "../../data/demo/admin";
 
-type AdminIcon = ComponentType<{
-  size?: number;
-  "aria-hidden"?: boolean;
-}>;
+type AdminIcon = typeof LayoutDashboard;
 
 export interface AdminNavigationItem {
   label: string;
