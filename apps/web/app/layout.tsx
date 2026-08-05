@@ -6,14 +6,15 @@ import "../styles/public-pages.css";
 import "../styles/auth.css";
 import "../styles/client.css";
 import "../styles/client-pages.css";
+import "../styles/video-lab.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "LevelUp IELTS",
-    template: "%s | LevelUp IELTS",
+    default: "LevelUp",
+    template: "%s | LevelUp",
   },
   description:
-    "Biến mục tiêu IELTS thành hành trình nhiệm vụ hằng ngày có cấu trúc.",
+    "Biến mục tiêu học tập và phát triển cá nhân thành hành trình nhiệm vụ mỗi ngày.",
 };
 
 export default function RootLayout({
