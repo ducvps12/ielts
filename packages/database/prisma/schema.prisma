@@ -20,6 +20,25 @@ enum GoalTemplateStatus {
   ARCHIVED
 }
 
+enum GoalCategory {
+  LANGUAGE
+  EDUCATION
+  CAREER
+  FITNESS
+  CREATIVE
+  BUSINESS
+  PERSONAL
+  CUSTOM
+}
+
+enum GoalStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ABANDONED
+}
+
 enum CampaignStatus {
   DRAFT
   ACTIVE
@@ -52,19 +71,126 @@ enum WalletTransactionKind {
   REVERSAL
 }
 
+enum LearningSourceType {
+  YOUTUBE_URL
+  SUBTITLE_UPLOAD
+  PASTED_TRANSCRIPT
+  LICENSED_PROVIDER
+}
+
+enum SourceAuthorizationStatus {
+  UNVERIFIED
+  USER_OWNED
+  USER_AUTHORIZED
+  LICENSED
+  REJECTED
+}
+
+enum LearningSourceStatus {
+  DRAFT
+  VALIDATING
+  TRANSCRIPT_REQUIRED
+  READY
+  REJECTED
+  ARCHIVED
+}
+
+enum VideoLessonStatus {
+  DRAFT
+  SOURCE_VALIDATING
+  TRANSCRIPT_REQUIRED
+  TRANSCRIPT_READY
+  ANALYZING
+  REVIEW_REQUIRED
+  READY
+  FAILED
+  ARCHIVED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum BillingInterval {
+  ONE_TIME
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum PaymentProvider {
+  PAYPAL
+  VIETQR
+  BANK_TRANSFER
+  BINANCE_PAY
+}
+
+enum CheckoutStatus {
+  CREATED
+  PENDING
+  SUCCEEDED
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentAttemptStatus {
+  CREATED
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  PAUSED
+  CANCELLED
+  EXPIRED
+}
+
+enum EntitlementStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+enum WebhookProcessingStatus {
+  RECEIVED
+  VERIFIED
+  PROCESSED
+  DUPLICATE
+  FAILED
+  REJECTED
+}
+
 model User {
-  id               String            @id @default(cuid())
-  email            String            @unique
-  displayName      String
-  status           UserStatus        @default(PENDING)
-  locale           String            @default("vi-VN")
-  timezone         String            @default("Asia/Ho_Chi_Minh")
-  campaigns        Campaign[]
-  questCompletions QuestCompletion[]
-  wallet           Wallet?
-  auditLogs        AuditLog[]        @relation("AuditActor")
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                String              @id @default(cuid())
+  email             String              @unique
+  displayName       String
+  status            UserStatus          @default(PENDING)
+  locale            String              @default("vi-VN")
+  timezone          String              @default("Asia/Ho_Chi_Minh")
+  goals             Goal[]
+  languageProfiles  LanguageProfile[]
+  campaigns         Campaign[]
+  questCompletions  QuestCompletion[]
+  learningSources   LearningSource[]
+  videoLessons      VideoLesson[]
+  checkoutSessions  CheckoutSession[]
+  subscriptions     Subscription[]
+  entitlementGrants EntitlementGrant[]
+  wallet            Wallet?
+  auditLogs         AuditLog[]          @relation("AuditActor")
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 
   @@index([status, createdAt])
 }
@@ -78,6 +204,7 @@ model GoalTemplate {
   version        Int                @default(1)
   estimatedDays  Int
   metadata       Json?
+  goals          Goal[]
   questTemplates QuestTemplate[]
   campaigns      Campaign[]
   createdAt      DateTime           @default(now())
@@ -87,8 +214,48 @@ model GoalTemplate {
   @@index([status, createdAt])
 }
 
-model QuestTemplate {
+model Goal {
   id             String        @id @default(cuid())
+  userId         String
+  goalTemplateId String?
+  category       GoalCategory
+  title          String
+  outcome        String
+  status         GoalStatus    @default(DRAFT)
+  targetDate     DateTime?
+  baseline       Json?
+  constraints    Json?
+  metadata       Json?
+  user           User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  goalTemplate   GoalTemplate? @relation(fields: [goalTemplateId], references: [id], onDelete: SetNull)
+  campaigns      Campaign[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId, status, createdAt])
+  @@index([category, status])
+  @@index([goalTemplateId])
+}
+
+model LanguageProfile {
+  id                    String   @id @default(cuid())
+  userId                String
+  uiLocale              String   @default("vi")
+  learningLanguage      String
+  explanationLanguage   String
+  proficiencyFramework  String
+  proficiencyLevel      String
+  preferences           Json?
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@unique([userId, learningLanguage])
+  @@index([learningLanguage, proficiencyFramework])
+}
+
+model QuestTemplate {
+  id             String          @id @default(cuid())
   goalTemplateId String
   key            String
   title          String
@@ -96,13 +263,13 @@ model QuestTemplate {
   type           QuestType
   dayOffset      Int
   estimatedMins  Int
-  xpReward       Int           @default(0)
-  goldReward     Int           @default(0)
+  xpReward       Int             @default(0)
+  goldReward     Int             @default(0)
   instructions   Json?
-  goalTemplate   GoalTemplate  @relation(fields: [goalTemplateId], references: [id], onDelete: Cascade)
+  goalTemplate   GoalTemplate    @relation(fields: [goalTemplateId], references: [id], onDelete: Cascade)
   questInstances QuestInstance[]
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@unique([goalTemplateId, key])
   @@index([goalTemplateId, dayOffset])
@@ -111,17 +278,20 @@ model QuestTemplate {
 model Campaign {
   id             String          @id @default(cuid())
   userId         String
+  goalId         String?
   goalTemplateId String
   status         CampaignStatus  @default(DRAFT)
   startedAt      DateTime?
   currentDay     Int             @default(1)
   user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  goal           Goal?           @relation(fields: [goalId], references: [id], onDelete: SetNull)
   goalTemplate   GoalTemplate    @relation(fields: [goalTemplateId], references: [id], onDelete: Restrict)
   questInstances QuestInstance[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   @@index([userId, status])
+  @@index([goalId, status])
   @@index([goalTemplateId, status])
 }
 
@@ -157,6 +327,90 @@ model QuestCompletion {
   @@index([userId, completedAt])
 }
 
+model LearningSource {
+  id                  String                    @id @default(cuid())
+  userId              String
+  type                LearningSourceType
+  provider            String?
+  externalId          String?
+  canonicalUrl        String?
+  assetKey            String?
+  authorizationStatus SourceAuthorizationStatus @default(UNVERIFIED)
+  status              LearningSourceStatus      @default(DRAFT)
+  transcriptLanguage  String?
+  authorizationNote   String?
+  metadata            Json?
+  user                User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  videoLessons        VideoLesson[]
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([userId, status, createdAt])
+  @@index([provider, externalId])
+  @@index([authorizationStatus, status])
+}
+
+model VideoLesson {
+  id                   String             @id @default(cuid())
+  userId               String
+  sourceId             String
+  idempotencyKey       String             @unique
+  title                String
+  status               VideoLessonStatus  @default(DRAFT)
+  learningLanguage     String
+  explanationLanguage  String
+  proficiencyLevel     String
+  modelProvider        String?
+  modelVersion         String?
+  pipelineVersion      String
+  failureCode          String?
+  reviewedAt           DateTime?
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  source               LearningSource     @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  transcriptSegments   TranscriptSegment[]
+  vocabularyItems      VocabularyItem[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([userId, status, createdAt])
+  @@index([sourceId, status])
+  @@index([learningLanguage, status])
+}
+
+model TranscriptSegment {
+  id        String      @id @default(cuid())
+  lessonId String
+  sequence Int
+  startMs  Int
+  endMs    Int
+  language String
+  text     String
+  lesson   VideoLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([lessonId, sequence])
+  @@index([lessonId, startMs])
+}
+
+model VocabularyItem {
+  id           String      @id @default(cuid())
+  lessonId     String
+  sequence     Int
+  term         String
+  partOfSpeech String?
+  translation  String
+  definition   String
+  example      String?
+  difficulty   String?
+  metadata     Json?
+  lesson       VideoLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([lessonId, sequence])
+  @@index([lessonId, term])
+}
+
 model Wallet {
   id           String              @id @default(cuid())
   userId       String              @unique
@@ -181,6 +435,158 @@ model WalletTransaction {
 
   @@index([walletId, createdAt])
   @@index([sourceType, sourceId])
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  key         String        @unique
+  name        String
+  description String
+  status      ProductStatus @default(DRAFT)
+  metadata    Json?
+  plans       Plan[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model Plan {
+  id             String          @id @default(cuid())
+  productId      String
+  key            String
+  name           String
+  description    String
+  status         ProductStatus   @default(DRAFT)
+  billingInterval BillingInterval
+  intervalCount  Int             @default(1)
+  entitlementKey String
+  limits         Json?
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  prices         Price[]
+  subscriptions  Subscription[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([productId, key])
+  @@index([status, createdAt])
+}
+
+model Price {
+  id              String           @id @default(cuid())
+  planId          String
+  currency        String
+  amountMinor     Int
+  active          Boolean          @default(false)
+  provider        PaymentProvider?
+  providerPriceId String?
+  countryCode     String?
+  plan            Plan             @relation(fields: [planId], references: [id], onDelete: Restrict)
+  checkoutSessions CheckoutSession[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([planId, active])
+  @@index([provider, providerPriceId])
+  @@index([currency, countryCode, active])
+}
+
+model CheckoutSession {
+  id                String          @id @default(cuid())
+  userId            String
+  priceId           String
+  provider          PaymentProvider
+  status            CheckoutStatus  @default(CREATED)
+  idempotencyKey    String          @unique
+  providerReference String?         @unique
+  successUrl        String
+  cancelUrl         String
+  expiresAt         DateTime?
+  metadata          Json?
+  user              User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  price             Price           @relation(fields: [priceId], references: [id], onDelete: Restrict)
+  paymentAttempts   PaymentAttempt[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([userId, status, createdAt])
+  @@index([provider, status, createdAt])
+}
+
+model PaymentAttempt {
+  id                String               @id @default(cuid())
+  checkoutSessionId String
+  provider          PaymentProvider
+  status            PaymentAttemptStatus @default(CREATED)
+  providerReference String?              @unique
+  amountMinor       Int
+  currency          String
+  failureCode       String?
+  failureMessage    String?
+  checkoutSession   CheckoutSession      @relation(fields: [checkoutSessionId], references: [id], onDelete: Restrict)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([checkoutSessionId, status])
+  @@index([provider, status, createdAt])
+}
+
+model Subscription {
+  id                  String             @id @default(cuid())
+  userId              String
+  planId              String
+  provider            PaymentProvider
+  status              SubscriptionStatus @default(INCOMPLETE)
+  providerReference   String             @unique
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean            @default(false)
+  cancelledAt         DateTime?
+  metadata            Json?
+  user                User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  plan                Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  entitlementGrants   EntitlementGrant[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@index([userId, status])
+  @@index([provider, status])
+}
+
+model EntitlementGrant {
+  id             String            @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  capability     String
+  status         EntitlementStatus @default(ACTIVE)
+  idempotencyKey String            @unique
+  startsAt       DateTime          @default(now())
+  endsAt         DateTime?
+  reason         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  subscription   Subscription?     @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  createdAt      DateTime          @default(now())
+
+  @@index([userId, capability, status])
+  @@index([subscriptionId, status])
+}
+
+model ProviderWebhookEvent {
+  id                String                  @id @default(cuid())
+  provider          PaymentProvider
+  merchantAccount   String
+  providerEventId   String
+  eventType         String
+  payloadHash       String
+  status            WebhookProcessingStatus @default(RECEIVED)
+  receivedAt        DateTime                @default(now())
+  verifiedAt        DateTime?
+  processedAt       DateTime?
+  failureCode       String?
+  failureMessage    String?
+
+  @@unique([provider, merchantAccount, providerEventId])
+  @@index([provider, status, receivedAt])
 }
 
 model SystemSetting {
