@@ -125,7 +125,7 @@ function StatePanel({
   className,
   role,
   ...props
-}: StatePanelProps & { tone?: "error"; role?: "alert" }) {
+}: StatePanelProps & { tone?: "error" }) {
   return (
     <section
       className={cn(
@@ -151,7 +151,7 @@ export function EmptyState(props: StatePanelProps) {
 }
 
 export function ErrorState(props: StatePanelProps) {
-  return <StatePanel tone="error" role="alert" {...props} />;
+  return <StatePanel {...props} tone="error" role="alert" />;
 }
 
 export interface PermissionDeniedProps extends HTMLAttributes<HTMLElement> {
