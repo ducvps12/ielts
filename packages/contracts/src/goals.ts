@@ -31,6 +31,22 @@ export interface GoalSummary {
   targetDate?: string;
   timezone: string;
   templateVersionId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateGoalRequest {
+  category: GoalCategory;
+  title: string;
+  outcome: string;
+  targetDate?: string;
+  baseline?: Record<string, unknown>;
+  constraints?: Record<string, unknown>;
+  learningProfile?: UpsertLanguageProfileRequest;
+}
+
+export interface UpdateGoalStatusRequest {
+  status: GoalStatus;
 }
 
 export const supportedUiLocales = ["vi", "en", "zh-CN", "fr"] as const;
@@ -49,11 +65,32 @@ export const initialLearningLanguages = [
 
 export type LearningLanguage = (typeof initialLearningLanguages)[number];
 
+export const proficiencyFrameworks = [
+  "CEFR",
+  "HSK",
+  "JLPT",
+  "TOPIK",
+  "CUSTOM",
+] as const;
+
+export type ProficiencyFramework = (typeof proficiencyFrameworks)[number];
+
 export interface LanguageProfileContract {
+  id?: string;
   userId: string;
   uiLocale: UiLocale;
   learningLanguage: LearningLanguage;
   explanationLanguage: LearningLanguage;
-  proficiencyFramework: "CEFR" | "HSK" | "JLPT" | "TOPIK" | "CUSTOM";
+  proficiencyFramework: ProficiencyFramework;
+  proficiencyLevel: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface UpsertLanguageProfileRequest {
+  uiLocale: UiLocale;
+  learningLanguage: LearningLanguage;
+  explanationLanguage: LearningLanguage;
+  proficiencyFramework: ProficiencyFramework;
   proficiencyLevel: string;
 }
