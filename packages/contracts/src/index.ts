@@ -1,16 +1,35 @@
+export type {
+  ApiErrorPayload,
+  AuthenticatedUser,
+  CsrfResponse,
+  LoginRequest,
+  PasswordResetRequest,
+  PasswordResetRequestedResponse,
+  RegisterRequest,
+  RegisterResponse,
+  ResetPasswordRequest,
+  SessionResponse,
+  VerifyEmailRequest,
+} from "./auth.js";
+
 export {
   goalCategories,
   goalStatuses,
   initialLearningLanguages,
+  proficiencyFrameworks,
   supportedUiLocales,
 } from "./goals.js";
 export type {
+  CreateGoalRequest,
   GoalCategory,
   GoalStatus,
   GoalSummary,
   LanguageProfileContract,
   LearningLanguage,
+  ProficiencyFramework,
   UiLocale,
+  UpdateGoalStatusRequest,
+  UpsertLanguageProfileRequest,
 } from "./goals.js";
 
 export {
