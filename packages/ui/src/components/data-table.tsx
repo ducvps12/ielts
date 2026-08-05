@@ -18,7 +18,7 @@ export function Table({
   );
 }
 
-export interface DataTableColumn<Row extends Record<string, unknown>> {
+export interface DataTableColumn<Row extends object> {
   id: string;
   header: string;
   cell: (row: Row) => ReactNode;
@@ -27,7 +27,7 @@ export interface DataTableColumn<Row extends Record<string, unknown>> {
   hideOnMobile?: boolean;
 }
 
-export interface DataTableProps<Row extends Record<string, unknown>>
+export interface DataTableProps<Row extends object>
   extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
   columns: DataTableColumn<Row>[];
   rows: Row[];
@@ -35,10 +35,9 @@ export interface DataTableProps<Row extends Record<string, unknown>>
   caption?: string;
   emptyTitle?: string;
   emptyDescription?: string;
-  rowActionsLabel?: string;
 }
 
-export function DataTable<Row extends Record<string, unknown>>({
+export function DataTable<Row extends object>({
   columns,
   rows,
   getRowId,
