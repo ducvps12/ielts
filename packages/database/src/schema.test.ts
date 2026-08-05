@@ -55,10 +55,10 @@ describe("Prisma schema invariants", () => {
   });
 
   it("uses minor units and idempotent facts for billing", () => {
-    expect(schema).toContain("amountMinor     Int");
+    expect(schema).toMatch(/amountMinor\s+Int/);
     expect(schema).toContain("model ProviderWebhookEvent {");
     expect(schema).toContain("@@unique([provider, merchantAccount, providerEventId])");
     expect(schema).toContain("model EntitlementGrant {");
-    expect(schema).toContain("idempotencyKey String            @unique");
+    expect(schema).toMatch(/idempotencyKey\s+String\s+@unique/);
   });
 });
