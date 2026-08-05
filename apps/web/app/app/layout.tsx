@@ -1,7 +1,10 @@
 import { ClientShell } from "../../components/client/client-shell";
+import { requireServerSession } from "../../lib/server-session";
 
-export default function AuthenticatedAppLayout({
+export default async function AuthenticatedAppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return <ClientShell>{children}</ClientShell>;
+  const session = await requireServerSession();
+
+  return <ClientShell user={session.user}>{children}</ClientShell>;
 }
